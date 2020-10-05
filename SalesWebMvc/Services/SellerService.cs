@@ -7,10 +7,11 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using SalesWebMvc.Services.Exceptions;
 
 namespace SalesWebMvc.Services
 {
-    public class SellerService 
+    public class SellerService
     {
         private readonly SalesWebMvcContext _context;
 
@@ -25,7 +26,7 @@ namespace SalesWebMvc.Services
         }
 
         public void Insert(Seller obj)
-        {   
+        {
             _context.Add(obj);
             _context.SaveChanges();
         }
@@ -40,6 +41,27 @@ namespace SalesWebMvc.Services
             var obj = _context.Seller.Find(id);
             _context.Seller.Remove(obj);
             _context.SaveChanges();
+        }
+
+        public void Update(Seller obj)
+        {
+            if (!_context.Seller.Any(x => x.Id == obj.Id))
+            {
+                throw new NotFoundException("Id not found");
+            }
+
+            try
+            {
+                _context.Update(obj);
+                _context.SaveChanges();
+            }
+            catch (DbConcurrencyException e)
+            {
+                {
+                    throw new DbConcurrencyException(e.Message);
+                }
+
+            }
         }
     }
 }
